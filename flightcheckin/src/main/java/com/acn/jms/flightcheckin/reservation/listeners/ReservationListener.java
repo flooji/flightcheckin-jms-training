@@ -23,7 +23,9 @@ public class ReservationListener implements MessageListener {
 		ObjectMessage objectMessage = (ObjectMessage) message;
 		
 		try(ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory();
-				JMSContext jmsContext = cf.createContext()) {
+				JMSContext jmsContext = cf.createContext(JMSContext.CLIENT_ACKNOWLEDGE)) {
+			
+			message.acknowledge();
 			
 			TextMessage confirmationMessage = jmsContext.createTextMessage();
 			

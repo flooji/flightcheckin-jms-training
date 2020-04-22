@@ -26,7 +26,7 @@ public class CheckInApp {
 		Queue replyQueue = (Queue) initialContext.lookup("queue/replyQueue");
 
 		try (ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory();
-				JMSContext jmsContext = cf.createContext();) {
+				JMSContext jmsContext = cf.createContext(JMSContext.SESSION_TRANSACTED);) {
 
 			JMSProducer producer = jmsContext.createProducer();
 			
@@ -41,11 +41,23 @@ public class CheckInApp {
 			ObjectMessage objectMessage = jmsContext.createObjectMessage();
 			objectMessage.setJMSReplyTo(replyQueue);
 			
-			for (Passenger passenger : passengerGroup) {
-				objectMessage.setObject(passenger);
-				producer.send(requestQueue, objectMessage);
-				System.out.println("Sending "+objectMessage.getJMSMessageID()+" "+passenger.getFirstName());
-			}			
+//			for (Passenger passenger : passengerGroup) {
+//				objectMessage.setObject(passenger);
+//				producer.send(requestQueue, objectMessage);
+//				System.out.println("Sending "+objectMessage.getJMSMessageID()+" "+passenger.getFirstName());
+//			}			
+			objectMessage.setObject(passengerGroup.get(0));
+			producer.send(requestQueue, objectMessage);
+			
+			objectMessage.setObject(passengerGroup.get(1));
+			producer.send(requestQueue, objectMessage);
+			
+			jmsContext.commit();
+			
+			objectMessage.setObject(passengerGroup.get(2));
+			producer.send(requestQueue, objectMessage);
+			
+			jmsContext.rollback();
 			
 			JMSConsumer consumer = jmsContext.createConsumer(replyQueue);
 			consumer.setMessageListener(new ConfirmationListener());
